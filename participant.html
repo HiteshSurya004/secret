@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/participant.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Participant Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+        }
+
+        h1 {
+            color: #2e8b57;
+        }
+
+        .form {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #2e8b57;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1c5b3f;
+        }
+
+        #assignment {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Participant Login</h1>
+
+    <div id="login" class="form">
+        <input type="text" id="username" placeholder="Enter your username">
+        <input type="password" id="password" placeholder="Enter your password">
+        <button onclick="participantLogin()">Login</button>
+    </div>
+
+    <div id="assignment">
+        <h2>Your Assignment</h2>
+        <p id="yourAssignment"></p>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        const credentials = JSON.parse(localStorage.getItem("credentials")) || {};
+        const assignments = JSON.parse(localStorage.getItem("assignments")) || {};
+        let loggedInUser = null;
+
+        function participantLogin() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            const participant = Object.keys(credentials).find(
+                name => credentials[name].username === username && credentials[name].password === password
+            );
+
+            if (!participant) {
+                alert("Invalid username or password.");
+                return;
+            }
+
+            loggedInUser = participant;
+            document.getElementById("login").style.display = "none";
+            document.getElementById("assignment").style.display = "block";
+            document.getElementById("yourAssignment").textContent = `You are giving a gift to: ${assignments[participant]}`;
+        }
+
+        function logout() {
+            loggedInUser = null;
+            document.getElementById("assignment").style.display = "none";
+            document.getElementById("login").style.display = "block";
+        }
+    </script>
+</body>
+</html>

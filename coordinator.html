@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/coordinator.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinator Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+        }
+
+        h1 {
+            color: #2e8b57;
+        }
+
+        .form {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #2e8b57;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #1c5b3f;
+        }
+
+        #registerForm, #result, #credentialsForm {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        ul {
+            padding: 0;
+            list-style-type: none;
+        }
+
+        li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Coordinator Panel</h1>
+
+    <div id="login" class="form">
+        <input type="text" id="username" placeholder="Coordinator Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="coordinatorLogin()">Login</button>
+    </div>
+
+    <div id="registerForm" class="form">
+        <h2>Register Participants</h2>
+        <textarea id="participantNames" placeholder="Enter participant names, one per line..."></textarea>
+        <button onclick="registerParticipants()">Register</button>
+    </div>
+
+    <div id="credentialsForm" class="form">
+        <h2>Assign Usernames and Passwords</h2>
+        <div id="credentialsInputs"></div>
+        <button onclick="saveCredentials()">Save Credentials</button>
+    </div>
+
+    <div id="result">
+        <h2>Assigned Pairs</h2>
+        <ul id="pairs"></ul>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        const coordinatorCredentials = { username: "coordinator", password: "admin123" };
+        let participants = [];
+        let assignments = {};
+        let credentials = {};
+
+        function coordinatorLogin() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            if (username === coordinatorCredentials.username && password === coordinatorCredentials.password) {
+                document.getElementById("login").style.display = "none";
+                document.getElementById("registerForm").style.display = "block";
+            } else {
+                alert("Invalid coordinator credentials.");
+            }
+        }
+
+        function registerParticipants() {
+            const names = document.getElementById("participantNames").value.trim().split("\n").filter(name => name.trim() !== "");
+            if (names.length < 2) {
+                alert("Please enter at least two participant names.");
+                return;
+            }
+
+            participants = names;
+            assignments = assignRecipients(names);
+
+            document.getElementById("registerForm").style.display = "none";
+            document.getElementById("credentialsForm").style.display = "block";
+
+            const credentialsInputs = document.getElementById("credentialsInputs");
+            credentialsInputs.innerHTML = "";
+            participants.forEach(name => {
+                const div = document.createElement("div");
+                div.innerHTML = `
+                    <p>${name}:</p>
+                    <input type="text" placeholder="Username" id="username-${name}">
+                    <input type="password" placeholder="Password" id="password-${name}">
+                `;
+                credentialsInputs.appendChild(div);
+            });
+        }
+
+        function assignRecipients(names) {
+            let givers = [...names];
+            let receivers = [...names];
+            const result = {};
+
+            while (givers.length > 0) {
+                const giverIndex = Math.floor(Math.random() * givers.length);
+                const giver = givers.splice(giverIndex, 1)[0];
+
+                let receiverIndex;
+                do {
+                    receiverIndex = Math.floor(Math.random() * receivers.length);
+                } while (receivers[receiverIndex] === giver);
+
+                const receiver = receivers.splice(receiverIndex, 1)[0];
+                result[giver] = receiver;
+            }
+
+            return result;
+        }
+
+        function saveCredentials() {
+            participants.forEach(name => {
+                const username = document.getElementById(`username-${name}`).value.trim();
+                const password = document.getElementById(`password-${name}`).value.trim();
+
+                if (!username || !password) {
+                    alert(`Please enter both username and password for ${name}.`);
+                    return;
+                }
+
+                credentials[name] = { username, password };
+            });
+
+            localStorage.setItem("credentials", JSON.stringify(credentials));
+            localStorage.setItem("assignments", JSON.stringify(assignments));
+
+            alert("Credentials saved. Participants can now log in.");
+            document.getElementById("credentialsForm").style.display = "none";
+
+            displayResults();
+        }
+
+        function displayResults() {
+            const resultDiv = document.getElementById("result");
+            const pairsList = document.getElementById("pairs");
+            pairsList.innerHTML = "";
+
+            for (const [giver, receiver] of Object.entries(assignments)) {
+                const li = document.createElement("li");
+                li.textContent = `${giver} → ${receiver}`;
+                pairsList.appendChild(li);
+            }
+
+            resultDiv.style.display = "block";
+        }
+
+        function logout() {
+            document.getElementById("result").style.display = "none";
+            document.getElementById("login").style.display = "block";
+        }
+    </script>
+</body>
+</html>
